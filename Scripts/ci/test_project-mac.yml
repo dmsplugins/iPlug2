@@ -45,6 +45,19 @@ steps:
   - bash: |
       curl -L "https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_macOS.zip" -o pluginval.zip
       unzip pluginval
-      ls -la
-      # pluginval.app/Contents/MacOS/pluginval --validate-in-process --output-dir "./bin" --validate "<path_to_plugin>" || exit 1
     displayName: Install PluginVal
+
+  - bash: |
+      pluginval.app/Contents/MacOS/pluginval --validate-in-process --output-dir "./bin" --validate "${{parameters.name}}.vst" || exit 1
+    displayName: Pluginval - Test ${{parameters.name}} VST2
+    condition: eq(variables.build_vst2, True)
+
+  - bash: |
+      pluginval.app/Contents/MacOS/pluginval --validate-in-process --output-dir "./bin" --validate "${{parameters.name}}.vst3" || exit 1
+    displayName: Pluginval - Test ${{parameters.name}} VST3
+    condition: eq(variables.build_vst3, True)
+
+  - bash: |
+      pluginval.app/Contents/MacOS/pluginval --validate-in-process --output-dir "./bin" --validate "${{parameters.name}}.component" || exit 1
+    displayName: Pluginval - Test ${{parameters.name}} AUv2
+    condition: eq(variables.build_auv2, True)

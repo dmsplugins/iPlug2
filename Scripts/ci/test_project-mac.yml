@@ -58,7 +58,10 @@ steps:
     condition: eq(variables.build_vst3, True)
 
   - bash: |
-      mv ${{parameters.name}}.component ~/Library/Audio/Plug-Ins/Components/
+      auval -a
+      
+  - bash: |
+      mv ${{parameters.name}}.component /Library/Audio/Plug-Ins/Components/
       pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "${{parameters.name}}.component" || exit 1
     displayName: Pluginval - Test ${{parameters.name}} AUv2
     condition: eq(variables.build_auv2, True)

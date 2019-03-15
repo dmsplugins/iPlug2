@@ -66,7 +66,7 @@ else
 	echo "--------------------------------------------------"
 	echo "--------------------------------------------------"
 	
-	auval $x64_ARGS -v $TYPE $PUID $PMID
+	auval $x64_ARGS -stress -v $TYPE $PUID $PMID
 
 fi
 

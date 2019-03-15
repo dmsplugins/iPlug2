@@ -60,8 +60,13 @@ steps:
   - bash: |
       mkdir -p ~/Library/Audio/Plug-Ins/Components/
       mv ${{parameters.name}}.component ~/Library/Audio/Plug-Ins/Components/
-      auval -a
     displayName: Install AUv2
+
+  - bash: |
+      cd scripts
+      ./validate_audiounit.sh
+    displayName: AUVAL - Test ${{parameters.name}} AUv2
+    condition: eq(variables.build_auv2, True)
 
   - bash: |
       pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "${{parameters.name}}.component" || exit 1

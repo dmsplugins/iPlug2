@@ -68,7 +68,7 @@ steps:
     condition: eq(variables.build_vst3, True)
 
   - bash: |
-      validator ${{parameters.name}}.vst3
+      ./validator ${{parameters.name}}.vst3
     displayName: VST3 Validator - Test ${{parameters.name}} VST3
     condition: eq(variables.build_vst3, True)
 

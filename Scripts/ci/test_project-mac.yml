@@ -58,7 +58,7 @@ steps:
     condition: eq(variables.build_vst3, True)
 
   - bash: |
-      mkdir ~/Library/Audio/Plug-Ins/Components/
+      mkdir -p ~/Library/Audio/Plug-Ins/Components/
       mv ${{parameters.name}}.component ~/Library/Audio/Plug-Ins/Components/
       auval -a
     displayName: Install AUv2

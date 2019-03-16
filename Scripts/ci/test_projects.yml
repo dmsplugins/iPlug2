@@ -32,7 +32,7 @@ jobs:
       cd VST3_BUILD
       cmake ../VST3_SDK -DCMAKE_BUILD_TYPE=Release
       make validator
-      mv bin/Release/validator $(Build.SourcesDirectory)
+      mv bin/Release/validator $BUILD_SOURCESDIRECTORY
     displayName: Download VST3 SDK, build validator
     condition: eq(variables.build_vst3, True)
 

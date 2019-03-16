@@ -48,32 +48,32 @@ steps:
   - task: ExtractFiles@1
     inputs:
       archiveFilePatterns: '$(Build.BinariesDirectory)/*.zip'
-      destinationFolder: $(Build.SourcesDirectory)
-      cleanDestinationFolder: false
+      destinationFolder: $(Build.StagingDirectory)
+      cleanDestinationFolder: True
     displayName: Extract zip file if it exists
 
   - bash: |
-      pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "${{parameters.name}}.vst" || exit 1
+      pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "$BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst" || exit 1
     displayName: Pluginval - Test ${{parameters.name}} VST2
     condition: eq(variables.build_vst2, True)
 
   - bash: |
-      pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "${{parameters.name}}.vst3" || exit 1
+      pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "$BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst3" || exit 1
     displayName: Pluginval - Test ${{parameters.name}} VST3
     condition: eq(variables.build_vst3, True)
 
   - bash: |
-      ./validator ${{parameters.name}}.vst3
+      ./validator $BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst3
     displayName: VST3 Validator - Test ${{parameters.name}} VST3
     condition: eq(variables.build_vst3, True)
 
   - bash: |
       mkdir -p ~/Library/Audio/Plug-Ins/Components/
-      mv ${{parameters.name}}.component ~/Library/Audio/Plug-Ins/Components/
+      mv $BUILD_STAGINGDIRECTORY/${{parameters.name}}.component ~/Library/Audio/Plug-Ins/Components/
     displayName: Install AUv2
 
   - bash: |
-      cd scripts
+      cd $BUILD_STAGINGDIRECTORY/scripts
       ./validate_audiounit.sh
     displayName: AUVAL - Test ${{parameters.name}} AUv2
     condition: eq(variables.build_auv2, True)

@@ -21,6 +21,21 @@ jobs:
   steps:
   - checkout: none
 
+  - bash: |
+      curl -L "https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_macOS.zip" -o pluginval.zip
+      unzip pluginval
+    displayName: Install PluginVal
+
+  - bash: |
+      git clone --recursive https://github.com/steinbergmedia/vst3sdk.git VST3_SDK
+      mkdir VST3_BUILD
+      cd VST3_BUILD
+      cmake ../VST3_SDK -DCMAKE_BUILD_TYPE=Release
+      make validator
+      mv bin/Release/validator $(Build.SourcesDirectory)
+    displayName: Download VST3 SDK, build validator
+    condition: eq(variables.build_vst3, True)
+
   - template: projects.yml
     parameters:
       platform: test_project-mac.yml

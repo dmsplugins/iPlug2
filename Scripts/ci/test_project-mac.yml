@@ -3,6 +3,11 @@ parameters:
   graphics: 'NANOVG'
 
 steps:
+  - bash: |
+      rm -r $(BUILD_SOURCESDIRECTORY)/*
+      rm -r $(BUILD_BINARIESDIRECTORY)/*
+    displayName: Clear dirs
+
   - task: DownloadPipelineArtifact@0
     continueOnError: true
     inputs:
@@ -41,21 +46,6 @@ steps:
       destinationFolder: $(Build.SourcesDirectory)
       cleanDestinationFolder: false
     displayName: Extract zip file if it exists
-
-  - bash: |
-      curl -L "https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_macOS.zip" -o pluginval.zip
-      unzip pluginval
-    displayName: Install PluginVal
-
-  - bash: |
-      git clone --recursive https://github.com/steinbergmedia/vst3sdk.git VST3_SDK
-      mkdir VST3_BUILD
-      cd VST3_BUILD
-      cmake ../VST3_SDK -DCMAKE_BUILD_TYPE=Release
-      make validator
-      mv bin/Release/validator $(Build.SourcesDirectory)
-    displayName: Download VST3 SDK, build validator
-    condition: eq(variables.build_vst3, True)
 
   - bash: |
       pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "${{parameters.name}}.vst" || exit 1

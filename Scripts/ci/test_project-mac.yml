@@ -3,15 +3,17 @@ parameters:
   graphics: 'NANOVG'
 
 steps:
-  - bash: |
-      if [ -f $BUILD_STAGINGDIRECTORY/*.h ]; then
-        rm $BUILD_STAGINGDIRECTORY/*.h
-      fi
+  - task: DeleteFiles@1
+    inputs:
+      sourceFolder: $(Build.BinariesDirectory)
+      contents: **
+    displayName: Clean Binaries Directory
 
-      if [ -f $BUILD_BINARIESDIRECTORY/*.zip ]; then
-        rm $BUILD_BINARIESDIRECTORY/*.zip
-      fi
-    displayName: Clear dirs
+  - task: DeleteFiles@1
+    inputs:
+      sourceFolder: $(Build.StagingDirectory)
+      contents: **
+    displayName: Clean Staging Directory
 
   - task: DownloadPipelineArtifact@0
     continueOnError: true

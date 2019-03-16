@@ -194,7 +194,8 @@ steps:
       if [ -d ${{parameters.name}}.component ]; then
         zip -r ../${{parameters.name}}_AU.zip ${{parameters.name}}.component; 
         cd ..; 
-        zip -ur ${{parameters.name}}_AU.zip config.h ../../Scripts/validate_audiounit.sh
+        cp ../../Scripts/validate_audiounit.sh .
+        zip -ur ${{parameters.name}}_AU.zip config.h validate_audiounit.sh
         mv ${{parameters.name}}_AU.zip $outputDir
       fi
 

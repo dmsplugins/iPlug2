@@ -4,8 +4,13 @@ parameters:
 
 steps:
   - bash: |
-      rm $BUILD_SOURCESDIRECTORY/*.h
-      rm $BUILD_BINARIESDIRECTORY/*.zip
+      if [ -f $BUILD_SOURCESDIRECTORY/*.h ]; then
+        rm $BUILD_SOURCESDIRECTORY/*.h
+      fi
+
+      if [ -f $BUILD_BINARIESDIRECTORY/*.zip ]; then
+        rm $BUILD_BINARIESDIRECTORY/*.zip
+      fi
     displayName: Clear dirs
 
   - task: DownloadPipelineArtifact@0

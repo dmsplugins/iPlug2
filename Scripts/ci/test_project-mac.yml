@@ -4,8 +4,8 @@ parameters:
 
 steps:
   - bash: |
-      rm -r $(BUILD_SOURCESDIRECTORY)/*
-      rm -r $(BUILD_BINARIESDIRECTORY)/*
+      rm -r $BUILD_SOURCESDIRECTORY/*
+      rm -r $BUILD_BINARIESDIRECTORY/*
     displayName: Clear dirs
 
   - task: DownloadPipelineArtifact@0

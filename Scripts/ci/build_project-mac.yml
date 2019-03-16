@@ -12,22 +12,23 @@ steps:
   #     certSecureFile: macos_certificate.p12
   #     certPwd: $(CERT_PWD)
 
-  - bash: |
-      echo srcRepo parameter = ${{ parameters.srcRepo }}
-      if [ ${{ parameters.srcRepo }} != none ]
-      then
-        if [ ! -d ./${{parameters.path}} ]
+  - ${{ if ne(parameters.srcRepo, 'none') }}:
+    - bash: |
+        echo srcRepo parameter = ${{ parameters.srcRepo }}
+        if [ ${{ parameters.srcRepo }} != none ]
         then
-          mkdir -p ./${{parameters.path}}
+          if [ ! -d ./${{parameters.path}} ]
+          then
+            mkdir -p ./${{parameters.path}}
+          fi
+          cd ./${{parameters.path}}
+          git clone --recursive -b ${{ parameters.srcBranch }} ${{ parameters.srcRepo }} ${{parameters.name}}
+        else
+          echo no remote repo argument supplied, building local project ${{parameters.path}}/${{parameters.name}} ... 
         fi
-        cd ./${{parameters.path}}
-        git clone --recursive -b ${{ parameters.srcBranch }} ${{ parameters.srcRepo }} ${{parameters.name}}
-      else
-        echo no remote repo argument supplied, building local project ${{parameters.path}}/${{parameters.name}} ... 
-      fi
-    env:
-      GITHUB_PAT: $(GITHUB_PAT)
-    displayName: (Optionally) clone ${{parameters.name}} repo
+      env:
+        GITHUB_PAT: $(GITHUB_PAT)
+      displayName: (Optionally) clone remote project repo
 
   - bash: |
       cd ./${{parameters.path}}/${{parameters.name}}/scripts

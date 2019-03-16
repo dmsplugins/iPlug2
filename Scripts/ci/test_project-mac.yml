@@ -4,8 +4,8 @@ parameters:
 
 steps:
   - bash: |
-      if [ -f $BUILD_SOURCESDIRECTORY/*.h ]; then
-        rm $BUILD_SOURCESDIRECTORY/*.h
+      if [ -f $BUILD_STAGINGDIRECTORY/*.h ]; then
+        rm $BUILD_STAGINGDIRECTORY/*.h
       fi
 
       if [ -f $BUILD_BINARIESDIRECTORY/*.zip ]; then

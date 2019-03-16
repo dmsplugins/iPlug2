@@ -17,22 +17,19 @@ PMID=`echo | grep PLUG_MFR_ID ../config.h`
 PMID=${PMID//\#define PLUG_MFR_ID }
 PMID=${PMID//\'}
 
-PII=`echo | grep PLUG_IS_INST ../config.h`
-PII=${PII//\#define PLUG_IS_INST }
-
-PDM=`echo | grep PLUG_DOES_MIDI_IN ../config.h`
-PDM=${PDM//\#define PLUG_DOES_MIDI_IN }
+PTYPE=`echo | grep PLUG_TYPE ../config.h`
+PTYPE=${PTYPE//\#define PLUG_TYPE }
 
 TYPE=aufx
 
-if [ $PII == 1 ] # instrument
+if [ "$PTYPE" == "1" ] # instrument
 then
 	TYPE=aumu
-else
-	if [ $PDM == 1 ] # midi effect
-	then
-		TYPE=aumf
-	fi
+fi
+
+if [ "$PTYPE" == "2" ] # midi effect
+then
+  TYPE=aumf
 fi
 
 if [ "$1" == "leaks" ]
@@ -50,14 +47,14 @@ then
 
 else
 	
-	echo "\nvalidating i386 32 bit... ------------------------"
-	echo "--------------------------------------------------"
-	echo "--------------------------------------------------"
-	echo "--------------------------------------------------"
-	echo "--------------------------------------------------"
-	echo "--------------------------------------------------"
+	# echo "\nvalidating i386 32 bit... ------------------------"
+	# echo "--------------------------------------------------"
+	# echo "--------------------------------------------------"
+	# echo "--------------------------------------------------"
+	# echo "--------------------------------------------------"
+	# echo "--------------------------------------------------"
 	
-	auval $x86_ARGS -v $TYPE $PUID $PMID
+	# auval $x86_ARGS -v $TYPE $PUID $PMID
 	
 	echo "\nvalidating i386 64 bit... ------------------------"
 	echo "--------------------------------------------------"
@@ -66,9 +63,9 @@ else
 	echo "--------------------------------------------------"
 	echo "--------------------------------------------------"
 	
-	auval $x64_ARGS -v $TYPE $PUID $PMID
+	auval $x64_ARGS -stress -v $TYPE $PUID $PMID
 
 fi
 
-echo "done"
+exit
 	

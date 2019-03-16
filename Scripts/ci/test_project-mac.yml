@@ -57,30 +57,37 @@ steps:
   - bash: |
       pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "$BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst" || exit 1
     displayName: Pluginval - Test ${{parameters.name}} VST2
+    continueOnError: true
     condition: eq(variables.build_vst2, True)
 
   - bash: |
       pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate "$BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst3" || exit 1
     displayName: Pluginval - Test ${{parameters.name}} VST3
+    continueOnError: true
     condition: eq(variables.build_vst3, True)
 
   - bash: |
       ./validator $BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst3
     displayName: VST3 Validator - Test ${{parameters.name}} VST3
+    continueOnError: true
     condition: eq(variables.build_vst3, True)
 
   - bash: |
       mkdir -p ~/Library/Audio/Plug-Ins/Components/
       mv $BUILD_STAGINGDIRECTORY/${{parameters.name}}.component ~/Library/Audio/Plug-Ins/Components/
+    continueOnError: true
     displayName: Install AUv2
+    condition: eq(variables.build_auv2, True)
 
   - bash: |
       cd $BUILD_STAGINGDIRECTORY/scripts
       ./validate_audiounit.sh
+    continueOnError: true
     displayName: AUVAL - Test ${{parameters.name}} AUv2
     condition: eq(variables.build_auv2, True)
 
   # - bash: |
   #     pluginval.app/Contents/MacOS/pluginval --validate-in-process --skip-gui-tests --output-dir "./bin" --validate ${{parameters.name}}.component || exit 1
   #   displayName: Pluginval - Test ${{parameters.name}} AUv2
+  #   continueOnError: true
   #   condition: eq(variables.build_auv2, True)

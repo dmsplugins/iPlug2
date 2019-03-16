@@ -80,6 +80,7 @@ steps:
     condition: eq(variables.build_auv2, True)
 
   - bash: |
+      cd $BUILD_STAGINGDIRECTORY
       ./validate_audiounit.sh config.h
     continueOnError: true
     displayName: AUVAL - Test ${{parameters.name}} AUv2

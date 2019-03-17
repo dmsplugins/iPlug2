@@ -73,8 +73,15 @@ jobs:
       mkdir VST3_BUILD
       cd VST3_BUILD
       cmake.exe -G"Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release ../VST3_SDK
-      msbuild public.sdk\samples\vst-hosting\validator\validator.vcxproj
     displayName: Download VST3 SDK, creat vs project 
+    condition: eq(variables.build_vst3, True)
+
+  - task: MSBuild@1
+    inputs:
+      solution: 'VST3_BUILD/vstsdk.sln'
+      msbuildArchitecture: 'x64'
+      configuration: Release
+      msbuildArguments: /t:validator
     condition: eq(variables.build_vst3, True)
 
   # - task: VSBuild@1

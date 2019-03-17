@@ -41,24 +41,37 @@ jobs:
       platform: test_project-mac.yml
       graphics: $(graphics)
 
-# - job: TEST_WIN_PROJECTS
-#   condition: and(eq(variables.test_projects, true), eq(variables.build_win, true))
-#   dependsOn: 
-#     - BUILD_WIN_PROJECTS
+- job: TEST_WIN_PROJECTS
+  condition: and(eq(variables.test_projects, true), eq(variables.build_win, true))
+  dependsOn: 
+    - BUILD_WIN_PROJECTS
 
-#   strategy:
-#     matrix:
-#       NANOVG:
-#         graphics: 'NANOVG'
-#       # CAIRO:
-#       #   graphics: 'CAIRO'
-#       # LICE:
-#       #   graphics: 'LICE'
-#       # AGG:
-#       #   graphics: 'AGG'
+  strategy:
+    matrix:
+      NANOVG:
+        graphics: 'NANOVG'
+      # CAIRO:
+      #   graphics: 'CAIRO'
+      # LICE:
+      #   graphics: 'LICE'
+      # AGG:
+      #   graphics: 'AGG'
 
-#   pool:
-#     vmImage: 'vs2017-win2016'
+  pool:
+    vmImage: 'vs2017-win2016'
 
-#   steps:
-#   - checkout: none
+  steps:
+  - checkout: none
+
+  - powershell: |
+      powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_Windows.zip -OutFile pluginval.zip"
+      powershell -Command "Expand-Archive pluginval.zip -DestinationPath ."
+    displayName: Install PluginVal
+
+  - powershell: |
+      git clone --recursive https://github.com/steinbergmedia/vst3sdk.git VST3_SDK
+      mkdir VST3_BUILD
+      cd VST3_BUILD
+      cmake.exe ../VST3_SDK -DCMAKE_BUILD_TYPE=Release
+    displayName: Download VST3 SDK, build validator
+    condition: eq(variables.build_vst3, True)

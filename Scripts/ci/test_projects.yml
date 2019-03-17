@@ -72,6 +72,27 @@ jobs:
       git clone --recursive https://github.com/steinbergmedia/vst3sdk.git VST3_SDK
       mkdir VST3_BUILD
       cd VST3_BUILD
-      cmake.exe ../VST3_SDK -DCMAKE_BUILD_TYPE=Release
+      cmake.exe -G"Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release ../VST3_SDK
     displayName: Download VST3 SDK, build validator
     condition: eq(variables.build_vst3, True)
+
+  - task: VSBuild@1
+    inputs:
+      solution: 'VST3_BUILD/vstsdk.sln'
+      vsVersion: '15.0'
+      platform: x64
+      msbuildArgs: /t:validator
+      configuration: 'Release'
+    displayName: Compile vst validator
+    condition: eq(variables.build_vst3, True)
+
+  - bash: |
+      cd VST3_BUILD
+      mv bin/Release/validator.exe $BUILD_SOURCESDIRECTORY
+    displayName: Move validator.exe
+    condition: eq(variables.build_vst3, True)
+
+  - template: projects.yml
+    parameters:
+      platform: test_project-win.yml
+      graphics: $(graphics)

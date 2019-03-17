@@ -81,7 +81,7 @@ jobs:
       solution: 'VST3_BUILD/vstsdk.sln'
       msbuildArchitecture: 'x64'
       configuration: Release
-      msbuildArguments: /t:validator
+      msbuildArguments: /t:HostingExamples\validator
     condition: eq(variables.build_vst3, True)
 
   # - task: VSBuild@1

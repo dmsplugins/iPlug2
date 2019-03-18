@@ -65,7 +65,7 @@ jobs:
 
   - powershell: |
       powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_Windows.zip -OutFile pluginval.zip"
-      powershell -Command "Expand-Archive pluginval.zip -DestinationPath $BUILD_SOURCESDIRECTORY"
+      powershell -Command "Expand-Archive pluginval.zip -DestinationPath ."
     displayName: Install PluginVal
 
   - powershell: |

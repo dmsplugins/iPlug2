@@ -46,22 +46,26 @@ steps:
       cleanDestinationFolder: True
     displayName: Extract zip file if it exists
 
+  - bash: |
+      ls -la $BUILD_STAGINGDIRECTORY
+    displayName: Ls
+
   - powershell: |
-      ./pluginval.exe --validate-in-process --output-dir "./bin" --skip-gui-tests --validate "$BUILD_STAGINGDIRECTORY/${{parameters.name}}_x64.dll"
+      ./pluginval.exe --validate-in-process --output-dir "./bin" --skip-gui-tests --validate "$env:BUILD_STAGINGDIRECTORY/${{parameters.name}}_x64.dll"
       if (%ERRORLEVEL% neq 0) { exit /b 1 }
     displayName: Pluginval - Test ${{parameters.name}} VST2
     continueOnError: true
     condition: eq(variables.build_vst2, True)
 
   - powershell: |
-      ./pluginval.exe --validate-in-process --output-dir "./bin" --skip-gui-tests --validate "$BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst3"
+      ./pluginval.exe --validate-in-process --output-dir "./bin" --skip-gui-tests --validate "$env:BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst3"
       if (%ERRORLEVEL% neq 0) { exit /b 1 }
     displayName: Pluginval - Test ${{parameters.name}} VST3
     continueOnError: true
     condition: eq(variables.build_vst3, True)
 
   - powershell: |
-      ./validator.exe $BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst3
+      ./validator.exe $env:$BUILD_STAGINGDIRECTORY/${{parameters.name}}.vst3
     displayName: VST3 Validator - Test ${{parameters.name}} VST3
     continueOnError: true
     condition: eq(variables.build_vst3, True)

@@ -85,7 +85,6 @@ jobs:
     condition: eq(variables.build_vst3, True)
 
   - bash: |
-      ls -la
       mv VST3_BUILD/bin/Release/validator.exe $BUILD_SOURCESDIRECTORY
     displayName: Move validator.exe
     condition: eq(variables.build_vst3, True)

@@ -65,7 +65,7 @@ jobs:
 
   - powershell: |
       powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_Windows.zip -OutFile pluginval.zip"
-      powershell -Command "Expand-Archive pluginval.zip -DestinationPath ."
+      powershell -Command "Expand-Archive pluginval.zip -DestinationPath $BUILD_SOURCESDIRECTORY"
     displayName: Install PluginVal
 
   - powershell: |
@@ -73,7 +73,7 @@ jobs:
       mkdir VST3_BUILD
       cd VST3_BUILD
       cmake.exe -G"Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release ../VST3_SDK
-    displayName: Download VST3 SDK, creat vs project 
+    displayName: Download VST3 SDK, run Cmake
     condition: eq(variables.build_vst3, True)
 
   - task: MSBuild@1
@@ -84,19 +84,9 @@ jobs:
       msbuildArguments: /t:HostingExamples\validator
     condition: eq(variables.build_vst3, True)
 
-  # - task: VSBuild@1
-  #   inputs:
-  #     solution: 'VST3_BUILD/vstsdk.sln'
-  #     vsVersion: '15.0'
-  #     platform: x64
-  #     msbuildArgs: /t:validator
-  #     configuration: 'Release'
-  #   displayName: Compile vst validator
-  #   condition: eq(variables.build_vst3, True)
-
   - bash: |
-      cd VST3_BUILD
-      mv bin/Release/validator.exe $BUILD_SOURCESDIRECTORY
+      ls -la
+      mv VST3_BUILD/bin/Release/validator.exe $BUILD_SOURCESDIRECTORY
     displayName: Move validator.exe
     condition: eq(variables.build_vst3, True)
 

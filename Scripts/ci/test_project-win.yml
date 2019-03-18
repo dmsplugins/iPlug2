@@ -47,7 +47,7 @@ steps:
     displayName: Extract zip file if it exists
 
   - bash: |
-      ls -la $BUILD_STAGINGDIRECTORY
+      ls -la $BUILD_BINARIESDIRECTORY
     displayName: Ls
 
   - powershell: |

@@ -21,6 +21,8 @@ BEGIN_IPLUG_NAMESPACE
 /** Shared VST3 State management code */
 struct IPlugVST3State
 {
+  /** Called when saving the plugin state to a host project or .vstpreset file.
+   * Writes chunk, bypass state, and preset name of currently selected preset to IBStream *state. */
   template <class T>
   static bool GetState(T* pPlug, Steinberg::IBStream* pState)
   {
@@ -28,14 +30,13 @@ struct IPlugVST3State
     
     // TODO: IPlugVer should be in chunk!
     //  IByteChunk::GetIPlugVerFromChunk(chunk)
+    Steinberg::int32 chunksize;
     
     if (pPlug->SerializeState(chunk))
     {
-      /*
-       int chunkSize = chunk.Size();
-       void* data = (void*) &chunkSize;
-       state->write(data, (Steinberg::int32) sizeof(int));*/
-      pState->write(chunk.GetData(), chunk.Size());
+      chunksize = chunk.Size();
+      
+      pState->write(chunk.GetData(), chunksize);
     }
     else
       return false;
@@ -43,9 +44,19 @@ struct IPlugVST3State
     Steinberg::int32 toSaveBypass = pPlug->GetBypassed() ? 1 : 0;
     pState->write(&toSaveBypass, sizeof (Steinberg::int32));
     
+    IPreset* pPreset = pPlug->GetPreset(pPlug->GetCurrentPresetIdx());
+    
+    Steinberg::Vst::String128 toSavePresetName;
+    WDL_String mPresetName;
+    mPresetName.Set(pPreset->mName);
+    Steinberg::UString(toSavePresetName, sizeof(Steinberg::Vst::String128)).fromAscii(mPresetName.Get());
+    pState->write(&toSavePresetName, sizeof(Steinberg::Vst::String128));
+    
     return true;
-  };
+  }
   
+  /** Called when restoring the plugin state from a saved host project or .vstpreset file.
+   * Loads chunk, bypass state, and preset name of saved preset from IBStream *state and restores at index 0. */
   template <class T>
   static bool SetState(T* pPlug, Steinberg::IBStream* pState)
   {
@@ -80,6 +91,22 @@ struct IPlugVST3State
     if (pController)
       pController->UpdateParams(pPlug, savedBypass);
     
+    Steinberg::Vst::String128 savedPresetName;
+    
+    if (pState->read(&savedPresetName, sizeof(Steinberg::Vst::String128)) != Steinberg::kResultOk)
+    {
+      return false;
+    }
+    
+    IPreset* pPreset = pPlug->GetPreset(0);
+    WDL_String mPresetName;
+    char PresetName[128];
+    Steinberg::UString(savedPresetName, sizeof(Steinberg::Vst::String128)).toAscii(PresetName, sizeof(Steinberg::Vst::String128));
+    mPresetName.Set(PresetName);
+    strcpy(pPreset->mName, mPresetName.Get());
+    
+    pPlug->ModifyPreset(0, pPreset->mName);
+    pPlug->RestorePreset(0);
     pPlug->OnRestoreState();
     
     return true;

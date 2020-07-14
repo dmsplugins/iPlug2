@@ -1460,8 +1460,6 @@ OSStatus IPlugAU::SetState(CFPropertyListRef pPropList)
   {
     return kAudioUnitErr_InvalidPropertyValue;
   }
-  
-  RestorePreset(presetName);
 
   IByteChunk chunk;
 
@@ -1479,6 +1477,8 @@ OSStatus IPlugAU::SetState(CFPropertyListRef pPropList)
     return kAudioUnitErr_InvalidPropertyValue;
   }
 
+  ModifyPreset(0, presetName);
+  RestorePreset(presetName);
   OnRestoreState();
   return noErr;
 }

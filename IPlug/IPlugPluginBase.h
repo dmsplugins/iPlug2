@@ -168,9 +168,14 @@ public:
 #pragma mark - Preset Manipulation
   
   /** Get a ptr to a factory preset
-   * @ param idx The index number of the preset you are referring to */
+   * @param idx The index number of the preset you are referring to */
   IPreset* GetPreset(int idx) { return mPresets.Get(idx); }
   
+  /** Sets the specified preset to whatever current params are.
+   * @param idx The index number of the preset to modify.
+   * @param name CString name of the modified preset */
+  void ModifyPreset(int idx, const char* name = 0);
+
   /** This method should update the current preset with current values
    * NOTE: This is only relevant for VST2 plug-ins, which is the only format to have the notion of banks?
    * @param name CString name of the modified preset */
@@ -189,6 +194,10 @@ public:
    * @param CString name of the preset to restore
    * @return \c true on success */
   bool RestorePreset(const char* name);
+
+  /** Restores the next or previous factory preset. Wraps to the first preset index from the last when incrementing and the opposite when decrementing.
+    * @param isIncrementing If set to true, the next preset is restored. If set to false, the preceeding preset is restored. */
+  void  IncrementPreset(bool isIncrementing);
 
   /** Get the name a preset
    * @param idx The index of the preset whose name to get
@@ -247,6 +256,15 @@ public:
   /** [VST2 only] /todo *  */
   void EnsureDefaultPreset();
 
+  /** Loads all Factory presets. Call this at end of your plugin constructor after parameters have been initialized and controls attached.
+   * Can be used on both chunk and non-chunk plugins. */
+  void CreatePresets();
+  
+  /** Override this method in your plugin by pasting presets copied from the text file made by one of the "DumpPreset" functions into it.
+   * For chunk based plugins, use MakePresetFromBlob(). For non-chunk based plugins, use MakePreset() or MakePresetFromNamedParams().
+   * If manually adding calls to a "MakePreset" function, add "++n;" after each call for an accurate count of presets in CreatePresets(). */
+  virtual void AddDumpedPresets(int& n) {}
+
   /** [VST2 only] /todo *  
    * @param chunk /todo
    * @return true /todo
@@ -281,6 +299,37 @@ public:
    * Note: Set PLUG_DOES_STATE_CHUNKS to 1 to load blob presets.
    * @param file The name of the file to write. */
   void DumpBankBlob(const char* file) const;
+  
+  /** Writes a call to MakePreset() for the current preset to a new text file, or adds it to a pre-existing one
+   * for pasting into AddDumpedPresets().
+   * @param file The name of the file to write or overwrite.
+   * @param incrementerAdded If set to true (default), adds "++n;" after each function call for counting presets in CreatePresets(). */
+  void DumpMakePresetSrcInc(const char* file, bool incrementerAdded = true) const;
+
+  /** Writes a call to MakePresetFromNamedParams() for the current preset to a new text file, or adds it to a pre-existing one
+   * for pasting into AddDumpedPresets().
+   * @param file The name of the file to write or overwrite.
+   * @param paramEnumNames A list of all parameter names. e.g. const char* pParamNames[] = {"kParam1", "kParam2", "kParam3"};
+   * @param incrementerAdded If set to true (default), adds "++n;" after each function call for counting presets in CreatePresets(). */
+  void DumpMakePresetFromNamedParamsSrcInc(const char* file, const char* paramEnumNames[], bool incrementerAdded = true) const;
+
+  /** Writes a call to MakePresetFromBlob() for the current preset to a new text file, or adds it to a pre-existing one
+   * for pasting into AddDumpedPresets(). Note: Set PLUG_DOES_STATE_CHUNKS to 1 to load blob presets.
+   * @param file The name of the file to write or overwrite.
+   * @param incrementerAdded If set to true (default), adds "++n;" after each function call for counting presets in CreatePresets(). */
+  void DumpPresetBlobInc(const char* file, bool incrementerAdded = true) const;
+
+  /** Writes a call to MakePresetFromBlob() for all presets to a new text file for pasting into AddDumpedPresets().
+   * Note: Set PLUG_DOES_STATE_CHUNKS to 1 to load blob presets.
+   * @param filename The name of the file to write.
+   * @param incrementerAdded If set to true (default), adds "++n;" after each function call for counting presets in CreatePresets(). */
+  void DumpAllPresetsBlobInc(const char* filename, bool incrementerAdded = true) const;
+
+  /** Writes a call to MakePresetFromBlob() for all presets to a new text file for pasting into AddDumpedPresets().
+   * Note: Set PLUG_DOES_STATE_CHUNKS to 1 to load blob presets.
+   * @param file The name of the file to write.
+   * @param incrementerAdded If set to true (default), adds "++n;" after each function call for counting presets in CreatePresets(). */
+  void DumpBankBlobInc(const char* file, bool incrementerAdded = true) const;
   
   /** Save current state as a VST2 format preset
    * @param file /todo

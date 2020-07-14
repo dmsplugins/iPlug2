@@ -453,6 +453,26 @@ bool IPluginBase::RestorePreset(const char* name)
   return false;
 }
 
+void  IPluginBase::IncrementPreset(bool isIncrementing)
+{
+  int numpresets = NPresets();
+  int currpreset = GetCurrentPresetIdx();
+  int prevpreset = (currpreset == 0) ? numpresets - 1 : currpreset - 1;
+  int nextpreset = (currpreset == numpresets - 1) ? 0 : currpreset + 1;
+  
+  if (isIncrementing)
+  {
+    RestorePreset(nextpreset);
+  }
+  else
+  {
+    RestorePreset(prevpreset);
+  }
+  
+  InformHostOfPresetChange();
+  DirtyParametersFromUI();
+}
+
 const char* IPluginBase::GetPresetName(int idx) const
 {
   if (idx >= 0 && idx < mPresets.GetSize())
@@ -460,6 +480,24 @@ const char* IPluginBase::GetPresetName(int idx) const
     return mPresets.Get(idx)->mName;
   }
   return "";
+}
+
+void IPluginBase::ModifyPreset(int idx, const char* name)
+{
+  if (idx >= 0 && idx < mPresets.GetSize())
+  {
+    IPreset* pPreset = mPresets.Get(idx);
+    pPreset->mChunk.Clear();
+    
+    Trace(TRACELOC, "%d %s", idx, pPreset->mName);
+    
+    SerializeState(pPreset->mChunk);
+    
+    if (CStringHasContents(name))
+    {
+      strcpy(pPreset->mName, name);
+    }
+  }
 }
 
 void IPluginBase::ModifyCurrentPreset(const char* name)
@@ -478,6 +516,15 @@ void IPluginBase::ModifyCurrentPreset(const char* name)
       strcpy(pPreset->mName, name);
     }
   }
+}
+
+void IPluginBase::CreatePresets()
+{
+  int n = 0;
+  int npresets = mPresets.GetSize();
+  
+  AddDumpedPresets(n);
+  if (n < npresets) MakeDefaultPreset("Default Preset", npresets - n);
 }
 
 bool IPluginBase::SerializePresets(IByteChunk& chunk) const
@@ -677,6 +724,164 @@ void IPluginBase::DumpBankBlob(const char* filename) const
     wdl_base64encode(pPresetChunk->GetData(), buf, pPresetChunk->Size());
     
     fprintf(fp, "%s\", %i);\n", buf, pPresetChunk->Size());
+  }
+  
+  fclose(fp);
+}
+
+void IPluginBase::DumpMakePresetSrcInc(const char* filename, bool incrementerAdded) const
+{
+  bool sDumped = false;
+  if (!sDumped)
+  {
+    sDumped = true;
+    int i, n = NParams();
+    FILE* fp = fopen(filename, "a");
+    
+    if (!fp)
+      return;
+    
+    int idx = GetCurrentPresetIdx();
+    fprintf(fp, "  MakePreset(\"%s\"", GetPresetName(idx));
+    for (i = 0; i < n; ++i)
+    {
+      const IParam* pParam = GetParam(i);
+      char paramVal[32];
+      switch (pParam->Type())
+      {
+        case IParam::kTypeBool:
+          sprintf(paramVal, "%s", (pParam->Bool() ? "true" : "false"));
+          break;
+        case IParam::kTypeInt:
+          sprintf(paramVal, "%d", pParam->Int());
+          break;
+        case IParam::kTypeEnum:
+          sprintf(paramVal, "%d", pParam->Int());
+          break;
+        case IParam::kTypeDouble:
+        default:
+          sprintf(paramVal, "%.6f", pParam->Value());
+          break;
+      }
+      fprintf(fp, ", %s", paramVal);
+    }
+    fprintf(fp, ");\n");
+    if (incrementerAdded) fprintf(fp, "  ++n;\n");
+    fclose(fp);
+  }
+}
+
+void IPluginBase::DumpMakePresetFromNamedParamsSrcInc(const char* filename, const char* paramEnumNames[], bool incrementerAdded) const
+{
+  // static bool sDumped = false;
+  bool sDumped = false;
+  
+  if (!sDumped)
+  {
+    sDumped = true;
+    int i, n = NParams();
+    FILE* fp = fopen(filename, "a");
+    
+    if (!fp)
+      return;
+    
+    int idx = GetCurrentPresetIdx();
+    fprintf(fp, "  MakePresetFromNamedParams(\"%s\", %d", GetPresetName(idx), n);
+    for (i = 0; i < n; ++i)
+    {
+      const IParam* pParam = GetParam(i);
+      char paramVal[32];
+      switch (pParam->Type())
+      {
+        case IParam::kTypeBool:
+          sprintf(paramVal, "%s", (pParam->Bool() ? "true" : "false"));
+          break;
+        case IParam::kTypeInt:
+          sprintf(paramVal, "%d", pParam->Int());
+          break;
+        case IParam::kTypeEnum:
+          sprintf(paramVal, "%d", pParam->Int());
+          break;
+        case IParam::kTypeDouble:
+        default:
+          sprintf(paramVal, "%.6f", pParam->Value());
+          break;
+      }
+      fprintf(fp, ",\n    %s, %s", paramEnumNames[i], paramVal);
+    }
+    fprintf(fp, ");\n");
+    if (incrementerAdded) fprintf(fp, "  ++n;\n");
+    fclose(fp);
+  }
+}
+
+void IPluginBase::DumpPresetBlobInc(const char* filename, bool incrementerAdded) const
+{
+  FILE* fp = fopen(filename, "a");
+  
+  if (!fp)
+    return;
+  
+  int idx = GetCurrentPresetIdx();
+  fprintf(fp, "  MakePresetFromBlob(\"%s\", \"", GetPresetName(idx));
+  
+  char buf[MAX_BLOB_LENGTH];
+  
+  IByteChunk* pPresetChunk = &mPresets.Get(mCurrentPresetIdx)->mChunk;
+  uint8_t* byteStart = pPresetChunk->GetData();
+  
+  wdl_base64encode(byteStart, buf, pPresetChunk->Size());
+  
+  fprintf(fp, "%s\", %i);\n", buf, pPresetChunk->Size());
+  if (incrementerAdded) fprintf(fp, "  ++n;\n");
+  fclose(fp);
+}
+
+void IPluginBase::DumpAllPresetsBlobInc(const char* filename, bool incrementerAdded) const
+{
+  FILE* fp = fopen(filename, "w");
+  
+  if (!fp)
+    return;
+  
+  char buf[MAX_BLOB_LENGTH] = "";
+  IByteChunk chnk;
+  
+  for (int i = 0; i< NPresets(); i++)
+  {
+    IPreset* pPreset = mPresets.Get(i);
+    fprintf(fp, "  MakePresetFromBlob(\"%s\", \"", pPreset->mName);
+    
+    chnk.Clear();
+    chnk.PutChunk(&(pPreset->mChunk));
+    wdl_base64encode(chnk.GetData(), buf, chnk.Size());
+    
+    fprintf(fp, "%s\", %i);\n", buf, chnk.Size());
+    if (incrementerAdded) fprintf(fp, "  ++n;\n");
+  }
+  
+  fclose(fp);
+}
+
+void IPluginBase::DumpBankBlobInc(const char* filename, bool incrementerAdded) const
+{
+  FILE* fp = fopen(filename, "w");
+  
+  if (!fp)
+    return;
+  
+  char buf[MAX_BLOB_LENGTH] = "";
+  
+  for (int i = 0; i< NPresets(); i++)
+  {
+    IPreset* pPreset = mPresets.Get(i);
+    fprintf(fp, "  MakePresetFromBlob(\"%s\", \"", pPreset->mName);
+    
+    IByteChunk* pPresetChunk = &pPreset->mChunk;
+    wdl_base64encode(pPresetChunk->GetData(), buf, pPresetChunk->Size());
+    
+    fprintf(fp, "%s\", %i);\n", buf, pPresetChunk->Size());
+    if (incrementerAdded) fprintf(fp, "  ++n;\n");
   }
   
   fclose(fp);

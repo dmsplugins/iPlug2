@@ -358,6 +358,14 @@ public:
    * @return false /todo */
   bool SaveBankAsFXPs(const char* path) const { return false; }
   
+  /** Sets path/file of specified bank for state storage/retrieval
+   * @param bankfile A const char* string containing a path/filename */
+  void SetLastBankLoaded(const char* bankfile) { mLastBankLoaded.Set(bankfile); }
+  
+  /** Gets path/file of bank specified by SetLastBankLoaded() for state storage/retrieval
+   * @return const char* path/filename string */
+  const char* GetLastBankLoaded() { return mLastBankLoaded.Get(); }
+  
   /** /todo 
    * @param chunk /todo
    * @param componentState /todo
@@ -529,6 +537,8 @@ protected:
   WDL_PtrList<const char> mParamGroups;
   /** "Baked in" Factory presets */
   WDL_PtrList<IPreset> mPresets;
+  /** A path/filename to a bank file */
+  WDL_String mLastBankLoaded;
 
 #ifdef PARAMS_MUTEX
   friend class IPlugVST3ProcessorBase;

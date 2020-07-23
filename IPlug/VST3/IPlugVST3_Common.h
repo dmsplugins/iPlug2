@@ -22,20 +22,22 @@ BEGIN_IPLUG_NAMESPACE
 struct IPlugVST3State
 {
   /** Called when saving the plugin state to a host project or .vstpreset file.
-   * Writes chunk, bypass state, and preset name of currently selected preset to IBStream *state. */
+   * Writes last loaded preset bank, chunk, bypass state, and preset name of currently selected preset to IBStream *state. */
   template <class T>
   static bool GetState(T* pPlug, Steinberg::IBStream* pState)
   {
+    Steinberg::Vst::String128 toSaveBankPath;
+    WDL_String mBankPath;
+    mBankPath.Set(pPlug->GetLastBankLoaded());
+    Steinberg::UString(toSaveBankPath, sizeof(Steinberg::Vst::String128)).fromAscii(mBankPath.Get());
+    pState->write(&toSaveBankPath, sizeof(Steinberg::Vst::String128));
+    
     IByteChunk chunk;
-    
-    // TODO: IPlugVer should be in chunk!
-    //  IByteChunk::GetIPlugVerFromChunk(chunk)
     Steinberg::int32 chunksize;
-    
+    IPreset* pPreset = pPlug->GetPreset(pPlug->GetCurrentPresetIdx());
+    chunksize = pPreset->mChunk.Size();
     if (pPlug->SerializeState(chunk))
     {
-      chunksize = chunk.Size();
-      
       pState->write(chunk.GetData(), chunksize);
     }
     else
@@ -43,8 +45,6 @@ struct IPlugVST3State
     
     Steinberg::int32 toSaveBypass = pPlug->GetBypassed() ? 1 : 0;
     pState->write(&toSaveBypass, sizeof (Steinberg::int32));
-    
-    IPreset* pPreset = pPlug->GetPreset(pPlug->GetCurrentPresetIdx());
     
     Steinberg::Vst::String128 toSavePresetName;
     WDL_String mPresetName;
@@ -56,32 +56,50 @@ struct IPlugVST3State
   }
   
   /** Called when restoring the plugin state from a saved host project or .vstpreset file.
-   * Loads chunk, bypass state, and preset name of saved preset from IBStream *state and restores at index 0. */
+   * Loads last loaded preset bank, chunk, bypass state, and preset name of saved preset from IBStream *state and restores at index 0. */
   template <class T>
   static bool SetState(T* pPlug, Steinberg::IBStream* pState)
   {
     TRACE
     
-    IByteChunk chunk;
+    Steinberg::Vst::String128 savedBankPath;
     
-    const int bytesPerBlock = 128;
-    char buffer[bytesPerBlock];
+    if (pState->read(&savedBankPath, sizeof(Steinberg::Vst::String128)) != Steinberg::kResultOk) {
+      return false;
+    }
+    
+    WDL_String mBankPath;
+    char bankpath[128];
+    Steinberg::UString(savedBankPath, sizeof(Steinberg::Vst::String128)).toAscii(bankpath, sizeof(Steinberg::Vst::String128));
+    mBankPath.Set(bankpath);
+    pPlug->SetLastBankLoaded(mBankPath.Get());
+    
+    if (CStringHasContents(pPlug->GetLastBankLoaded()))
+    {
+      pPlug->LoadBankFromFXB(pPlug->GetLastBankLoaded());
+    }
+    
+    IByteChunk chunk;
+    IPreset* pPreset = pPlug->GetPreset(0);
+    Steinberg::int32 chunksize = pPreset->mChunk.Size();
+    char buffer[chunksize];
     
     while(true)
     {
       Steinberg::int32 bytesRead = 0;
-      auto status = pState->read(buffer, (Steinberg::int32) bytesPerBlock, &bytesRead);
+      auto status = pState->read(buffer, chunksize, &bytesRead);
       
       if (bytesRead <= 0 || (status != Steinberg::kResultTrue && pPlug->GetHost() != kHostWaveLab))
         break;
       
-      chunk.PutBytes(buffer, bytesRead);
+      chunk.PutBytes(buffer, chunksize);
     }
     int pos = pPlug->UnserializeState(chunk,0);
+    pos += sizeof(Steinberg::Vst::String128);
     
     Steinberg::int32 savedBypass = 0;
     
-    pState->seek(pos,Steinberg::IBStream::IStreamSeekMode::kIBSeekSet);
+    pState->seek(pos, Steinberg::IBStream::IStreamSeekMode::kIBSeekSet);
     if (pState->read (&savedBypass, sizeof (Steinberg::int32)) != Steinberg::kResultOk) {
       return false;
     }
@@ -98,7 +116,6 @@ struct IPlugVST3State
       return false;
     }
     
-    IPreset* pPreset = pPlug->GetPreset(0);
     WDL_String mPresetName;
     char PresetName[128];
     Steinberg::UString(savedPresetName, sizeof(Steinberg::Vst::String128)).toAscii(PresetName, sizeof(Steinberg::Vst::String128));

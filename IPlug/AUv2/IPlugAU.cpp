@@ -1430,6 +1430,8 @@ OSStatus IPlugAU::GetState(CFPropertyListRef* ppPropList)
   PutNumberInDict(pDict, kAUPresetManufacturerKey, &(plugManID), kCFNumberSInt32Type);
   PutStrInDict(pDict, kAUPresetNameKey, GetPresetName(GetCurrentPresetIdx()));
 
+  PutStrInDict(pDict, kAUPresetExternalFileRefs, GetLastBankLoaded());
+
   IByteChunk chunk;
   //InitChunkWithIPlugVer(&IPlugChunk); // TODO: IPlugVer should be in chunk!
 
@@ -1459,6 +1461,17 @@ OSStatus IPlugAU::SetState(CFPropertyListRef pPropList)
       mfr != GetMfrID())
   {
     return kAudioUnitErr_InvalidPropertyValue;
+  }
+
+  char lastbankloaded[128];
+  if (!GetStrFromDict(pDict, kAUPresetExternalFileRefs, lastbankloaded))
+  {
+    return kAudioUnitErr_InvalidPropertyValue;
+  }
+  SetLastBankLoaded(lastbankloaded);
+  if (CStringHasContents(GetLastBankLoaded()))
+  {
+    LoadBankFromFXB(GetLastBankLoaded());
   }
 
   IByteChunk chunk;

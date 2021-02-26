@@ -81,18 +81,18 @@ struct IPlugVST3State
     
     IByteChunk chunk;
     IPreset* pPreset = pPlug->GetPreset(0);
-    Steinberg::int32 chunksize = pPreset->mChunk.Size();
-    char buffer[chunksize];
+    const int bytesPerBlock = 128;
+    char buffer[bytesPerBlock];
     
     while(true)
     {
       Steinberg::int32 bytesRead = 0;
-      auto status = pState->read(buffer, chunksize, &bytesRead);
+      auto status = pState->read(buffer, (Steinberg::int32) bytesPerBlock, &bytesRead);
       
       if (bytesRead <= 0 || (status != Steinberg::kResultTrue && pPlug->GetHost() != kHostWaveLab))
         break;
       
-      chunk.PutBytes(buffer, chunksize);
+      chunk.PutBytes(buffer, bytesRead);
     }
     int pos = pPlug->UnserializeState(chunk,0);
     pos += sizeof(Steinberg::Vst::String128);
@@ -124,7 +124,6 @@ struct IPlugVST3State
     
     pPlug->ModifyPreset(0, pPreset->mName);
     pPlug->RestorePreset(0);
-    pPlug->OnRestoreState();
     
     return true;
   }

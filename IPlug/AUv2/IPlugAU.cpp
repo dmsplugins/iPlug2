@@ -1491,8 +1491,7 @@ OSStatus IPlugAU::SetState(CFPropertyListRef pPropList)
   }
 
   ModifyPreset(0, presetName);
-  RestorePreset(presetName);
-  OnRestoreState();
+  RestorePreset(0);
   return noErr;
 }
 

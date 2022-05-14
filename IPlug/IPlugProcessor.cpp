@@ -22,11 +22,11 @@
 using namespace iplug;
 
 IPlugProcessor::IPlugProcessor(const Config& config, EAPI plugAPI)
-: mLatency(config.latency)
-, mPlugType((EIPlugPluginType) config.plugType)
+: mPlugType((EIPlugPluginType) config.plugType)
 , mDoesMIDIIn(config.plugDoesMidiIn)
 , mDoesMIDIOut(config.plugDoesMidiOut)
 , mDoesMPE(config.plugDoesMPE)
+, mLatency(config.latency)
 {
   int totalNInBuses, totalNOutBuses;
   int totalNInChans, totalNOutChans;
@@ -283,7 +283,7 @@ int IPlugProcessor::ParseChannelIOStr(const char* IOStr, WDL_PtrList<IOConfig>& 
   bool foundAWildcard = false;
   int IOConfigIndex = 0;
 
-  DBGMSG("BEGIN IPLUG CHANNEL IO PARSER --------------------------------------------------\n");
+  DBGMSG("\nBEGIN IPLUG CHANNEL IO PARSER --------------------------------------------------\n");
   // lamda function to iterate through the period separated buses and check that none have 0 channel count
   auto ParseBusToken = [&foundAWildcard, &IOConfigIndex](ERoute busDir, char* pBusStr, char* pBusStrEnd, int& NBuses, int& NChans, IOConfig* pConfig)
   {

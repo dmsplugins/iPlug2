@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1210"
+   LastUpgradeVersion = "1250"
    version = "2.0">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -55,7 +55,7 @@
       </MacroExpansion>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "$(SRCROOT)/../$(PRODUCT_NAME).RPP"
+            argument = "&quot;$(SRCROOT)/../$(PRODUCT_NAME).RPP&quot;"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -68,7 +68,7 @@
       debugDocumentVersioning = "YES">
       <PathRunnable
          runnableDebuggingMode = "0"
-         FilePath = "/Applications/REAPER64.app">
+         FilePath = "/Applications/REAPER.app">
       </PathRunnable>
    </ProfileAction>
    <AnalyzeAction

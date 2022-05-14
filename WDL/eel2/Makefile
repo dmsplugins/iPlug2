@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -DWDL_FFT_REALSIZE=8  -Wall -Wno-unused-function -Wno-multichar -Wno-unused-result -Wshadow
+CFLAGS=-g -DWDL_FFT_REALSIZE=8  -Wall -Wno-unused-function -Wno-multichar -Wno-unused-result -Wshadow -Wtype-limits
 LFLAGS=
 CXX=g++
 
@@ -26,6 +26,8 @@ ifeq ($(ARCH), aarch64)
 endif
 
 ifeq ($(UNAME_S),Darwin)
+  CC=clang
+  CXX=clang++
   CFLAGS += -arch $(ARCH)
 endif
 
@@ -109,25 +111,38 @@ ifndef NO_GFX
 
 endif
 
-
-asm-nseel-x64.o: a2x64.php asm-nseel-x86-gcc.c
-	php a2x64.php elf64
-
 ifdef PORTABLE
   CFLAGS +=  -DEEL_TARGET_PORTABLE
 else
   ifeq ($(UNAME_S),Darwin)
     ifeq ($(ARCH),x86_64)
-      OBJS2 += asm-nseel-x64-macho.o
+      ASM_FMT = macho64
+      NASM_OPTS = --prefix _
+      OBJS2 += asm-nseel-x64-sse.o
     endif
   endif
   ifeq ($(UNAME_S),Linux)
     ifeq ($(ARCH),x86_64)
-      OBJS2 += asm-nseel-x64.o
+      ASM_FMT = elf64
+      NASM_OPTS =
+      OBJS2 += asm-nseel-x64-sse.o
     endif
   endif
+
+asm-nseel-x64-sse.o: asm-nseel-x64-sse.asm
+	nasm -D AMD64ABI -f $(ASM_FMT) $(NASM_OPTS) asm-nseel-x64-sse.asm
+
 endif
 CXXFLAGS=$(CFLAGS)
+
+ifeq ($(CXX),g++)
+  GCC_VER := $(shell $(CXX) --version|head -n 1| sed 's/.* \([0-9][0-9]*\)[.][0-9.]*/\1/' )
+  GCC_GT_10 := $(shell [ "$(GCC_VER)" -gt 10 ] && echo true )
+  ifeq ($(GCC_GT_10),true)
+    CXXFLAGS += -std=c++03
+  endif
+endif
+
 
 
 %.o : %.mm
@@ -137,4 +152,6 @@ loose_eel: loose_eel.o $(OBJS) $(OBJS2)
 	g++ -o $@ $^ $(CXXFLAGS) $(LFLAGS)
 
 clean:
-	-rm loose_eel loose_eel.o $(OBJS) 
+	-rm -f -- loose_eel loose_eel.o $(OBJS)
+
+.PHONY: clean

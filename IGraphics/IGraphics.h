@@ -413,6 +413,15 @@ public:
    * @param charHeight how high is a character in the bitmap
    * @param charOffset what is the offset between characters drawn */
   void DrawBitmapedText(const IBitmap& bitmap, const IRECT& bounds, IText& text, IBlend* pBlend, const char* str, bool vCenter = true, bool multiline = false, int charWidth = 6, int charHeight = 12, int charOffset = 0);
+  
+  /** Draw a horzional or vertical line, within a rectangular region of the graphics context
+   * @param color The color to draw the line with
+   * @param bounds The rectangular region to draw the line in
+   * @param dir The direction of the line
+   * @param pos The normalized position of the line on the horizontal or vertical axis, within bounds
+   * @param pBlend Optional blend method
+   * @param thickness Optional line thickness */
+  void DrawLineAcross(const IColor& color, const IRECT& bounds, EDirection dir, float pos, const IBlend* pBlend = 0, float thickness = 1.f);
 
   /** Draw a vertical line, within a rectangular region of the graphics context
    * @param color The color to draw the line with
@@ -541,12 +550,13 @@ public:
   * @param shadow - the shadow to add */
   void ApplyLayerDropShadow(ILayerPtr& layer, const IShadow& shadow);
 
-protected:
-  /** Get the contents of a layers pixels as bitmap data
+  /** Get the contents of a layer as Raw RGBA bitmap data
+   * NOTE: you should only call this within IControl::Draw()
    * @param layer The layer to get the data from
    * @param data The pixel data extracted from the layer */
   virtual void GetLayerBitmapData(const ILayerPtr& layer, RawBitmapData& data) = 0;
   
+protected:
   /** Implemented by a graphics backend to apply a calculated shadow mask to a layer, according to the shadow settings specified
    * @param layer The layer to apply the shadow to
    * @param mask The mask of the shadow as raw bitmap data
@@ -849,9 +859,9 @@ public:
    * @param fileName Non const WDL_String reference specifying the file name. Set this prior to calling the method for save dialogs, to provide a default file name. For file-open dialogs, on successful selection of a file this will get set to the file’s name.
    * @param path WDL_String reference where the path will be put on success or empty string on failure/user cancelled
    * @param action Determines whether this is an file-open dialog or a file-save dialog
-   * @param extensions A space separated CString list of file extensions to filter in the dialog (e.g. “.wav .aif”
+   * @param ext A space separated CString list of file extensions to filter in the dialog (e.g. “.wav .aif”
    * @param completionHandler an IFileDialogCompletionHandlerFunc that will be called when a file is selected or the dialog is cancelled */
-  virtual void PromptForFile(WDL_String& fileName, WDL_String& path, EFileAction action = EFileAction::Open, const char* extensions = 0, IFileDialogCompletionHandlerFunc completionHandler = nullptr) = 0;
+  virtual void PromptForFile(WDL_String& fileName, WDL_String& path, EFileAction action = EFileAction::Open, const char* ext = "", IFileDialogCompletionHandlerFunc completionHandler = nullptr) = 0;
 
   /** Create a platform file prompt dialog to choose a directory path for opening/saving a directory. NOTE: this method will block the main thread
    * @param dir Non const WDL_String reference specifying the directory path. Set this prior to calling the method for save dialogs, to provide a default path. For load dialogs, on successful selection of a directory this will get set to the full path.
@@ -1016,14 +1026,10 @@ public:
    * @param pMenu The menu that was clicked */
   void SetControlValueAfterPopupMenu(IPopupMenu* pMenu);
     
-  /** \todo 
-   * @param lo \todo
-   * @param hi \todo */
-  void SetScaleConstraints(float lo, float hi)
-  {
-    mMinScale = std::min(lo, hi);
-    mMaxScale = std::max(lo, hi);
-  }
+  /** Sets the minimum and maximum (draw) scaling values
+   * @param lo The minimum scalar that the IGraphics context can be scaled down to
+   * @param hi The maxiumum scalar that the IGraphics context can be scaled up to */
+  void SetScaleConstraints(float lo, float hi);
   
   /** \todo detailed description of how this works
    * @param w New width in pixels
@@ -1427,21 +1433,21 @@ public:
   void SetAllControlsClean();
     
   /** Reposition a control, redrawing the interface correctly
-   @param idx The index of the control
-   @param x The new x position
-   @param y The new y position */
-  void SetControlPosition(int idx, float x, float y);
+   * @param pControl The control
+   * @param x The new x position
+   * @param y The new y position */
+  void SetControlPosition(IControl* pControl, float x, float y);
   
   /** Resize a control, redrawing the interface correctly
-   @param idx The index of the control
-   @param w The new width
-   @param h The new height */
-  void SetControlSize(int idx, float w, float h);
+   * @param pControl The control
+   * @param w The new width
+   * @param h The new height */
+  void SetControlSize(IControl* pControl, float w, float h);
   
   /** Set a controls target and draw rect to r, redrawing the interface correctly
-   @param idx The index of the control 
-   @param r The new bounds for the control's target and draw rect */
-  void SetControlBounds(int idx, const IRECT& r);
+   * @param idx The index of the control
+   * @param r The new bounds for the control's target and draw rect */
+  void SetControlBounds(IControl* pControl, const IRECT& r);
   
 private:
   /** Get the index of the control at x and y coordinates on mouse event

@@ -695,6 +695,10 @@ static id<MTLDevice> mtl_def_device()
   return m_wndproc ? m_wndproc((HWND)self,msg,wParam,lParam) : 0;
 }
 
+- (BOOL) isEnabled
+{
+  return m_enabled;
+}
 - (void) setEnabled:(BOOL)en
 { 
   m_enabled=en?1:0; 
@@ -3603,7 +3607,7 @@ NSArray* SWELL_DoDragDrop(NSURL* droplocation)
         
         int digits=0;
         int i;
-        for (i=0; i < 3 && len > i+1 && isdigit(p[len-i-1]); ++i) ++digits;
+        for (i=0; i < 3 && len > i+1 && isdigit_safe(p[len-i-1]); ++i) ++digits;
         if (len > digits+1 && (p[len-digits-1] == ' ' || p[len-digits-1] == '-' || p[len-digits-1] == '_'))         
         {
           incr=atoi(p+len-digits);
